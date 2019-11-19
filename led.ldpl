@@ -71,6 +71,7 @@ procedure:
             display " \033[33ml <from> <count>\033[0m lists <count> lines from the buffer from line <from>." crlf
             display " \033[33ma\033[0m enters append mode." crlf
             display " \033[33ma <from>\033[0m enters append mode and appends text to the buffer at line <from>." crlf
+            display " \033[33m.\033[0m exits append mode." crlf
             display " \033[33md <from>\033[0m deletes all lines from the buffer from line <from>." crlf
             display " \033[33md <from> <count>\033[0m deletes <count> lines from the buffer from line <from>." crlf
             display " \033[33mi\033[0m displays file information." crlf
@@ -252,7 +253,7 @@ local data:
     line          is text
 procedure:
     if fileName is equal to "" then
-        display "Use /cn to set a filename before saving." crlf
+        display "Use 'n' to set a filename before saving." crlf
         return
     end if
     for each line in fileContents do
