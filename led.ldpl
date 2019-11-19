@@ -252,7 +252,7 @@ local data:
     line          is text
 procedure:
     if fileName is equal to "" then
-        display "Use /cn to set a filename before saving." crlf
+        display "Use 'n' to set a filename before saving." crlf
         return
     end if
     for each line in fileContents do
