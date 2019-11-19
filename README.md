@@ -24,7 +24,7 @@ You can download pre-compiled binaries of led for amd64 Linux from the
 
 Run `led <file>` to open `<file>` and edit it. Alternatively you can just run `led` to create a new, empty file.
 
-Led has two modes, command mode and append mode. When in command mode, all text entered is interpreted as a command.
+led has working two modes, command mode and append mode. When in command mode, all text entered is interpreted as a command.
 When in append mode, all text entered is appended to a buffer. To exit append mode, enter a line with just a dot in it
 (`.`).
 
@@ -45,4 +45,4 @@ When in append mode, all text entered is appended to a buffer. To exit append mo
  - `r <line>` allows retyping of line `<line>`.
 
  ### License
- Lute was created by [Lartu](https://lartu.net) and is released under the GPLv3 license.
+ led was created by [Lartu](https://lartu.net) and is released under the GPLv3 license.
