@@ -1,0 +1,321 @@
+#  _          _ 
+# | |        | |
+# | | ___  __| |
+# | |/ _ \/ _` |
+# | |  __/ (_| |
+# |_|\___|\__,_|
+              
+# The LDPL Editor
+# by Martín del Río (www.lartu.net), 2019
+
+data:
+fileName          is text
+fileContents      is text list
+lineCount         is number
+argc              is number
+hasSaved          is number
+mode              is number
+linePointer       is number
+appendBuffer      is text list
+appendLocation    is number
+
+procedure:
+store 1 in hasSaved
+store "" in fileName
+get length of argv in argc
+if argc is greater than 0 then
+    store argv:0 in fileName
+    call loadFile
+end if
+display "Welcome to \033[36mled\033[0m, the LDPL Text Editor" crlf
+display "Enter 'h' for help." crlf
+if fileName is not equal to "" then
+    display "Loaded file '" fileName "'." crlf
+else
+    display "Initialized an empty buffer." crlf
+end if
+while 1 is equal to 1 do
+    get length of fileContents in lineCount
+    call getLine
+repeat
+
+# ----- Sub-Procedures -----
+
+sub getLine
+local data:
+    inputLine     is text
+    firstChar     is text
+    lineToFetch   is number
+    tokens        is text list
+    tokenCount    is number
+    i             is number
+    appendLine    is text
+    newBuffer     is text list
+    from          is number
+    count         is number
+procedure:
+    # --- Command Mode ---
+    if mode is equal to 0 then
+        display "\033[90m>\033[0m "
+        accept inputLine
+        trim inputLine in inputLine
+        split inputLine by " " in tokens
+        get length of tokens in tokenCount
+        if tokens:0 is equal to "h" then
+            display "This is \033[36mled\033[0m version 1.0, the LDPL Text Editor." crlf
+            display "Created by Martín del Río, (c) 2019, released under the GPLv3 license." crlf
+            display "Commands:" crlf
+            display " \033[33mh\033[0m shows this help." crlf
+            display " \033[33ml\033[0m lists the contents of the buffer." crlf
+            display " \033[33ml <from>\033[0m lists the buffer from line <from>." crlf
+            display " \033[33ml <from> <count>\033[0m lists <count> lines from the buffer from line <from>." crlf
+            display " \033[33ma\033[0m enters append mode." crlf
+            display " \033[33md <from>\033[0m deletes all lines from the buffer from line <from>." crlf
+            display " \033[33md <from> <count>\033[0m deletes <count> lines from the buffer from line <from>." crlf
+            display " \033[33mi\033[0m displays file information." crlf
+            display " \033[33mq\033[0m exits led." crlf
+            display " \033[33mc\033[0m clears the screen." crlf
+            display " \033[33ms\033[0m saves the buffer to a file." crlf
+            display " \033[33mn\033[0m changes the name of the destination file." crlf
+            display " \033[33mr <line>\033[0m allows retyping of line <line>." crlf            
+        else if tokens:0 is equal to "l" then
+            store 0 in from
+            store lineCount in count
+            if tokenCount is greater than 1 then
+                store tokens:1 in from
+                in from solve from - 1
+            end if
+            if tokenCount is greater than 2 then
+                store tokens:2 in count
+            end if
+            if from is less than 0 then
+                store 0 in from
+            end if
+            call displayFile with from count
+        else if tokens:0 is equal to "d" then
+            if tokenCount is equal to 1 then
+                display "Usage: d <from> <line count>" crlf
+                return
+            end if
+            store 0 in from
+            store lineCount in count
+            if tokenCount is greater than 1 then
+                store tokens:1 in from
+                in from solve from - 1
+            end if
+            if tokenCount is greater than 2 then
+                store tokens:2 in count
+            end if
+            if from is less than 0 then
+                store 0 in from
+            end if
+            call deleteLines with from count
+        else if tokens:0 is equal to "q" then
+            call exitEditor
+        else if tokens:0 is equal to "c" then
+            display "\033c"
+        else if tokens:0 is equal to "i" then
+            display "File name: " fileName crlf
+            display "Line count: " lineCount crlf
+        else if tokens:0 is equal to "s" then
+            if tokenCount is greater than 1 then
+                store tokens:1 in fileName
+            end if
+            call saveFile
+        else if tokens:0 is equal to "n" then
+            if tokenCount is greater than 1 then
+                store tokens:1 in fileName
+            else
+                display "New file name: "
+                accept fileName
+            end if
+        else if tokens:0 is equal to "a" then
+            if tokenCount is greater than 1 then
+                store tokens:1 in linePointer
+                in linePointer solve linePointer - 1
+                if linePointer is greater than lineCount then
+                    store lineCount in linePointer
+                end if
+            else
+                store lineCount in linePointer
+            end if
+            if linePointer is less than 0 then
+                store 0 in linePointer
+            end if
+            in appendLocation solve linePointer
+            store 1 in mode
+            display "\033[33mAppend Mode\033[0m" crlf
+        else if tokens:0 is equal to "r" then
+            if tokenCount is greater than 1 then
+                store tokens:1 in lineToFetch
+                in lineToFetch solve lineToFetch - 1
+                if lineToFetch is less than lineCount then
+                    in linePointer solve lineToFetch + 1
+                    display "\033[90m" linePointer "\033[0m " fileContents:lineToFetch crlf
+                    display "\033[90m" linePointer "\033[0m "
+                    accept inputLine
+                    if inputLine is equal to "." then
+                        display "Cancelled." crlf
+                    else
+                        store inputLine in fileContents:lineToFetch
+                    end if
+                else
+                    display "No such line." crlf
+                end if
+            else
+                display "Usage: r <line number>" crlf
+            end if
+        else
+            display "Unknown command '" inputLine "', enter 'h' for help." crlf
+        end if
+    
+    # --- Append Mode ---
+    else if mode is equal to 1 then
+        in linePointer solve linePointer + 1
+        display "\033[90m" linePointer "\033[0m "
+        accept inputLine
+        if inputLine is equal to "." then
+            if appendLocation is equal to lineCount then
+                for each appendLine in appendBuffer do
+                    push appendLine to fileContents
+                repeat
+            else
+                for i from 0 to lineCount step 1 do
+                    if i is equal to appendLocation then
+                        for each appendLine in appendBuffer do
+                            push appendLine to newBuffer
+                        repeat
+                    end if
+                    push fileContents:i to newBuffer
+                repeat
+                copy newBuffer to fileContents
+            end if
+            clear appendBuffer
+            display "\033[36mCommand Mode\033[0m" crlf
+            store 0 in mode
+        else
+            # --- Add line to file ---
+            push inputLine to appendBuffer
+            store 0 in hasSaved
+        end if
+    end if
+end sub
+
+sub displayFile
+parameters:
+    from          is number
+    count         is number
+local data:
+    i             is number
+    lineNumber    is number
+procedure:
+    display "\033[90m--- File '" fileName "' ---\033[0m" crlf
+    store from in i
+    while i is less than lineCount and count is greater than 0 do
+        in lineNumber solve i + 1
+        call printLineNumber with lineNumber
+        display fileContents:i "\033[90m$\033[0m\n"
+        in count solve count - 1
+        in i solve i + 1
+    repeat
+    display "\033[90m--- End of File ---\033[0m" crlf
+end sub
+
+sub deleteLines
+parameters:
+    from          is number
+    count         is number
+local data:
+    i             is number
+    newBuffer     is text list
+procedure:
+    if count is greater than 0 and from is less than count then
+        store 0 in hasSaved
+    end if
+    while i is less than lineCount do
+        if i is equal to from then
+            in i solve i + count - 1
+        else
+            push fileContents:i to newBuffer
+        end if
+        in i solve i + 1
+    repeat
+    copy newBuffer to fileContents
+    in from solve from + 1
+    display "Deleted up to " count " line(s) from line " from "." crlf
+end sub
+
+sub saveFile
+local data:
+    fileText      is text
+    line          is text
+procedure:
+    if fileName is equal to "" then
+        display "Use /cn to set a filename before saving." crlf
+        return
+    end if
+    for each line in fileContents do
+        if fileText is not equal to "" then
+            in fileText join fileText "\n"
+        end if
+        in fileText join fileText line
+    repeat
+    write fileText to file fileName
+    display "Saved to file '" fileName "'." crlf
+    store 1 in hasSaved
+end sub
+
+sub loadFile
+local data:
+    fileText      is text
+procedure:
+    load file fileName in fileText
+    split fileText by "\n" in fileContents
+    delete last element of fileContents
+end sub
+
+sub exitEditor
+local data:
+    option        is text
+procedure:
+    if hasSaved is equal to 0 then
+        display "The file '" fileName "' has been edited but not saved." crlf
+        display "Would you like to save it? (y/n/c): "
+        while 1 is equal to 1 do
+            accept option
+            if option is equal to "y" or option is equal to "Y" then
+                call saveFile
+                exit
+            else if option is equal to "n" or option is equal to "N" then
+                exit
+            else if option is equal to "c" or option is equal to "C" then
+                display "Cancelled." crlf
+                return
+            end if
+            display "Please enter 'y' or 'n': "
+        repeat
+    else
+        exit
+    end if
+end sub
+
+sub printLineNumber
+parameters:
+    lineNumber is number
+local data:
+    numberText is text
+    digits is number
+    digits2 is number
+    i is number
+procedure:
+    store lineCount in numberText
+    get length of numberText in digits
+    store lineNumber in numberText
+    get length of numberText in digits2
+    store digits2 in i
+    while i is less than digits do
+        display " "
+        in i solve i + 1
+    repeat
+    display "\033[35m" lineNumber "\033[0m "
+end sub
