@@ -35,7 +35,7 @@ When in append mode, all text entered is appended to a buffer. To exit append mo
  - `l <from> <count>` lists `<count>` lines from the buffer from line `<from>`.
  - `a` enters append mode.
  - `a <from>` enters append mode and appends text to the buffer at line `<from>`.
- - `d <from>` deletes all lines from the buffer from line `<from>`.
+ - `d <line>` deletes line `<line>` from the buffer.
  - `d <from> <count>` deletes `<count>` lines from the buffer from line `<from>`.
  - `i` s file information.
  - `q` exits led.
