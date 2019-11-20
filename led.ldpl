@@ -9,6 +9,7 @@
 # by Martín del Río (www.lartu.net), 2019
 
 data:
+version           is text
 fileName          is text
 fileContents      is text list
 lineCount         is number
@@ -20,6 +21,7 @@ appendBuffer      is text list
 appendLocation    is number
 
 procedure:
+store "1.1" in version
 store 1 in hasSaved
 store "" in fileName
 get length of argv in argc
@@ -62,7 +64,7 @@ procedure:
         split inputLine by " " in tokens
         get length of tokens in tokenCount
         if tokens:0 is equal to "h" then
-            display "This is \033[36mled\033[0m version 1.0, the LDPL Text Editor." crlf
+             display "This is \033[36mled\033[0m version " version ", the LDPL Text Editor." crlf
             display "Created by Martín del Río, (c) 2019, released under the GPLv3 license." crlf
             display "Commands:" crlf
             display " \033[33mh\033[0m shows this help." crlf
@@ -251,19 +253,21 @@ end sub
 sub saveFile
 local data:
     fileText      is text
-    line          is text
+    i             is number
 procedure:
     if fileName is equal to "" then
         display "Use 'n' to set a filename before saving." crlf
         return
-    end if
-    for each line in fileContents do
-        if fileText is not equal to "" then
-            in fileText join fileText "\n"
-        end if
-        in fileText join fileText line
-    repeat
-    write fileText to file fileName
+	end if
+	write "" to file fileName
+	for i from 0 to lineCount step 1 do
+		append fileContents:i to file fileName
+		in i solve i + 1
+		if i is less than lineCount then
+			append "\n" to file fileName
+		end if
+		in i solve i - 1
+	repeat
     display "Saved to file '" fileName "'." crlf
     store 1 in hasSaved
 end sub
@@ -322,3 +326,4 @@ procedure:
     repeat
     display "\033[35m" lineNumber "\033[0m "
 end sub
+# ---
