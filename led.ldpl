@@ -72,7 +72,7 @@ procedure:
             display " \033[33ma\033[0m enters append mode." crlf
             display " \033[33ma <from>\033[0m enters append mode and appends text to the buffer at line <from>." crlf
             display " \033[33m.\033[0m exits append mode." crlf
-            display " \033[33md <from>\033[0m deletes all lines from the buffer from line <from>." crlf
+            display " \033[33md <line>\033[0m deletes line <line> from the buffer." crlf
             display " \033[33md <from> <count>\033[0m deletes <count> lines from the buffer from line <from>." crlf
             display " \033[33mi\033[0m displays file information." crlf
             display " \033[33mq\033[0m exits led." crlf
@@ -100,7 +100,7 @@ procedure:
                 return
             end if
             store 0 in from
-            store lineCount in count
+		store 1 in count
             if tokenCount is greater than 1 then
                 store tokens:1 in from
                 in from solve from - 1
@@ -112,6 +112,7 @@ procedure:
                 store 0 in from
             end if
             call deleteLines with from count
+		store 0 in hasSaved
         else if tokens:0 is equal to "q" then
             call exitEditor
         else if tokens:0 is equal to "c" then
