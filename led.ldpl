@@ -19,6 +19,7 @@ mode              is number
 linePointer       is number
 appendBuffer      is text list
 appendLocation    is number
+copyBuffer        is text list
 
 procedure:
 store "1.1" in version
@@ -102,7 +103,7 @@ procedure:
                 return
             end if
             store 0 in from
-		store 1 in count
+		    store 1 in count
             if tokenCount is greater than 1 then
                 store tokens:1 in from
                 in from solve from - 1
@@ -119,6 +120,20 @@ procedure:
             call exitEditor
         else if tokens:0 is equal to "c" then
             display "\033c"
+        else if tokens:0 is equal to "k" then
+            if tokenCount is less than 3 then
+                display "Usage: k <from> <count>" crlf
+                return
+            end if
+            store tokens:1 in from
+            store tokens:2 in count
+            if from is less than 0 then
+                store 0 in from
+            end if
+            if count is less than 0 then
+                store 0 in count
+            end if
+            call copyToBuffer with from count
         else if tokens:0 is equal to "i" then
             display "File name: " fileName crlf
             display "Line count: " lineCount crlf
@@ -233,21 +248,30 @@ parameters:
 local data:
     i             is number
     newBuffer     is text list
+	deleted is number
+	j is number
 procedure:
-    if count is greater than 0 and from is less than count then
+	if count is greater than 0 then
         store 0 in hasSaved
-    end if
+	end if
     while i is less than lineCount do
-        if i is equal to from then
-            in i solve i + count - 1
+        if i is equal to from and count is greater than 0 then
+		    for j from 0 to count step 1 do
+		        if i is less than lineCount then
+    			    in deleted solve deleted + 1
+    			    in i solve i + 1
+    			else
+    			    break
+			    end if
+		    repeat
         else
             push fileContents:i to newBuffer
+            in i solve i + 1
         end if
-        in i solve i + 1
     repeat
     copy newBuffer to fileContents
     in from solve from + 1
-    display "Deleted up to " count " line(s) from line " from "." crlf
+	display "Deleted " deleted " line(s)." crlf
 end sub
 
 sub saveFile
@@ -326,4 +350,24 @@ procedure:
     repeat
     display "\033[35m" lineNumber "\033[0m "
 end sub
-# ---
+
+sub copyToBuffer
+parameters:
+	from is number
+	count is number
+local data:
+	i is number
+	copied is number
+procedure:
+	clear copyBuffer
+	in from solve from - 1
+	in count solve from + count
+	for i from from to count step 1 do
+		if i is greater than or equal to lineCount then
+			break
+		end if
+		push fileContents:i to copyBuffer
+		in copied solve copied + 1
+	repeat
+	display "Copied " copied " line(s) to the copy buffer." crlf
+end sub
