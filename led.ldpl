@@ -8,6 +8,8 @@
 # The LDPL Editor
 # by Martín del Río (www.lartu.net), 2019
 
+extension "ldplnoise/ldplnoise.cpp"
+
 data:
 version           is text
 fileName          is text
@@ -20,9 +22,11 @@ linePointer       is number
 appendBuffer      is text list
 appendLocation    is number
 copyBuffer        is text list
+rl-input          is external text
+rl-prompt         is external text
 
 procedure:
-store "1.1" in version
+store "1.2" in version
 store 1 in hasSaved
 store "" in fileName
 get length of argv in argc
@@ -59,8 +63,10 @@ local data:
 procedure:
     # --- Command Mode ---
     if mode is equal to 0 then
-        display "\033[90m>\033[0m "
-        accept inputLine
+        store "\033[90m>\033[0m " in rl-prompt
+        call external rl-accept
+        call external rl-add-history
+        store rl-input in inputLine
         trim inputLine in inputLine
         split inputLine by " " in tokens
         get length of tokens in tokenCount
@@ -146,8 +152,9 @@ procedure:
             if tokenCount is greater than 1 then
                 store tokens:1 in fileName
             else
-                display "New file name: "
-                accept fileName
+                store "New file name: " in rl-prompt
+                call external rl-accept
+                store rl-input in fileName
             end if
         else if tokens:0 is equal to "a" then
             if tokenCount is greater than 1 then
@@ -172,8 +179,9 @@ procedure:
                 if lineToFetch is less than lineCount then
                     in linePointer solve lineToFetch + 1
                     display "\033[90m" linePointer "\033[0m " fileContents:lineToFetch crlf
-                    display "\033[90m" linePointer "\033[0m "
-                    accept inputLine
+                    in rl-prompt join "\033[90m" linePointer "\033[0m "
+                    call external rl-accept
+                    store rl-input in inputLine
                     if inputLine is equal to "." then
                         display "Cancelled." crlf
                     else
@@ -192,8 +200,9 @@ procedure:
     # --- Append Mode ---
     else if mode is equal to 1 then
         in linePointer solve linePointer + 1
-        display "\033[90m" linePointer "\033[0m "
-        accept inputLine
+        in rl-prompt join "\033[90m" linePointer "\033[0m "
+        call external rl-accept
+        store rl-input in inputLine
         if inputLine is equal to "." then
             if appendLocation is equal to lineCount then
                 for each appendLine in appendBuffer do
@@ -311,9 +320,10 @@ local data:
 procedure:
     if hasSaved is equal to 0 then
         display "The file '" fileName "' has been edited but not saved." crlf
-        display "Would you like to save it? (y/n/c): "
+        store "Would you like to save it? (y/n/c): " in rl-prompt
         while 1 is equal to 1 do
-            accept option
+            call external rl-accept
+            store rl-input in option
             if option is equal to "y" or option is equal to "Y" then
                 call saveFile
                 exit
