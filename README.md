@@ -13,7 +13,7 @@ written in [LDPL](https://github.com/lartu/ldpl), inspired by the ed and sed tex
 
 ## Building led
 
-Clone this repository, `cd` it and run `ldpl led.ldpl -o=led`. Done!
+Clone this repository using the `-r` flag to also clone [dvkt](https://github.com/dvkt)'s wonderful [ldplnoise](https://github.com/dvkt/ldplnoise) library, `cd` into the cloned *led* repository and run `ldpl led.ldpl -o=led`. Done!
 
 ### Releases
 
