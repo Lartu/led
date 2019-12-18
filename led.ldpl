@@ -24,6 +24,7 @@ appendLocation    is number
 copyBuffer        is text list
 rl-input          is external text
 rl-prompt         is external text
+argument          is text
 
 procedure:
 store "1.2" in version
@@ -31,6 +32,12 @@ store 1 in hasSaved
 store "" in fileName
 get length of argv in argc
 if argc is greater than 0 then
+    for each argument in argv do
+        if argument is equal to "-v" or argument is equal to "--version" then
+            call display_version
+            exit
+        end if
+    repeat
     store argv:0 in fileName
     call loadFile
 end if
@@ -71,8 +78,7 @@ procedure:
         split inputLine by " " in tokens
         get length of tokens in tokenCount
         if tokens:0 is equal to "h" then
-             display "This is \033[36mled\033[0m version " version ", the LDPL Text Editor." crlf
-            display "Created by Martín del Río, (c) 2019, released under the GPLv3 license." crlf
+            call display_version
             display "Commands:" crlf
             display " \033[33mh\033[0m shows this help." crlf
             display " \033[33ml\033[0m lists the contents of the buffer." crlf
@@ -380,4 +386,9 @@ procedure:
 		in copied solve copied + 1
 	repeat
 	display "Copied " copied " line(s) to the copy buffer." crlf
+end sub
+
+sub display_version
+    display "This is \033[36mled\033[0m version " version ", the LDPL Text Editor." crlf
+    display "Created by Martín del Río, (c) 2019, released under the GPLv3 license." crlf
 end sub
