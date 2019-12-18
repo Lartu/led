@@ -317,7 +317,7 @@ local data:
 procedure:
     load file fileName in fileText
     split fileText by "\n" in fileContents
-    #delete last element of fileContents
+    delete last element of fileContents
 end sub
 
 sub exitEditor
